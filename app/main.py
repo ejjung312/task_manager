@@ -1,10 +1,10 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, BackgroundTasks, Query
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError
 from sqlalchemy.orm import Session
 from .database import SessionLocal, engine, Base
 
-from . import models, schemas, crud, auth
+from . import models, schemas, crud, auth, email_utils
 
 Base.metadata.create_all(bind=engine)
 app = FastAPI()
@@ -60,9 +60,30 @@ def read_users_me(current_user: models.User = Depends(get_current_user)):
     return current_user
 
 
-@app.post("/register", response_model=schemas.UserOut)
-async def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
+@app.post("/register")
+async def register(user: schemas.UserCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     if db.query(models.User).filter_by(user_id=user.user_id).first():
         raise HTTPException(status_code=400, detail="User Id already exists")
+
+    crud.create_user(db, user)
+
+    token = auth.create_email_token(user.email)
+    # BackgroundTasks - 백그라운드 작업
+    background_tasks.add_task(email_utils.send_verification_email, user.email, token)
     
-    return crud.create_user(db, user)
+    return {"message": "회원가입 완료. 이메일 인증 링크를 확인하세요."}
+
+@app.get("/verify-email")
+def verify_email(token: str = Query(...), db: Session = Depends(get_db)):
+    try:
+        email = auth.verify_email_token(token)
+    except Exception:
+        raise HTTPException(status_code=400, detail="유효하지 않은 토큰입니다.")
+    
+    user = db.query(models.User).filter_by(email=email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+    
+    user.is_verified = True
+    db.commit()
+    return {"message": "이메일 인증이 완료되었습니다."}

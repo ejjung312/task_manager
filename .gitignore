@@ -15,3 +15,7 @@ instance/
 venv/
 .envrc
 .DS_Store
+
+# Alembic 캐시만 제외
+alembic/__pycache__/
+alembic/versions/__pycache__/

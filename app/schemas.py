@@ -14,6 +14,7 @@ class UserLogin(BaseModel):
 
 class UserCreate(BaseModel):
     user_id: str = Field(..., max_length=30) # Pydantic에서 필수값 의미
+    email: str = Field(..., max_length=100)
     password: str = Field(..., min_length=6)
     name: str = Field(..., max_length=50)
 

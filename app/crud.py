@@ -9,6 +9,7 @@ def create_user(db: Session, user: schemas.UserCreate):
     db_user = models.User(
         user_id=user.user_id,
         password=hashed_pw,
+        email=user.email,
         name=user.name
     )
     db.add(db_user) # 현재 세션에 추가. INSERT는 되지 않음
