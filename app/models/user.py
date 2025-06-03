@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, DateTime, Boolean
 from sqlalchemy.sql import func
-from .database import Base
+from app.database import Base
 
 class User(Base):
     __tablename__ = "users"
@@ -11,5 +11,3 @@ class User(Base):
     email = Column(String(100), nullable=False)
     is_verified = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    
-    
