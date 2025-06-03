@@ -1,6 +1,17 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
 
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    user_id: str | None = None
+
+class UserLogin(BaseModel):
+    user_id: str
+    password: str
+
 class UserCreate(BaseModel):
     user_id: str = Field(..., max_length=30) # Pydantic에서 필수값 의미
     password: str = Field(..., min_length=6)
